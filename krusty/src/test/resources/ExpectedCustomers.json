@@ -2,11 +2,11 @@
   "customers": [
     {"name": "Bjudkakor AB", "address": "Ystad"},
     {"name": "Finkakor AB", "address": "Helsingborg"},
-    {"name": "GÃ¤stkakor AB", "address": "HÃ¤ssleholm"},
-    {"name": "KaffebrÃ¶d AB", "address": "Landskrona"},
+    {"name": "Gästkakor AB", "address": "Hässleholm"},
+    {"name": "Kaffebröd AB", "address": "Landskrona"},
     {"name": "Kalaskakor AB", "address": "Trelleborg"},
     {"name": "Partykakor AB", "address": "Kristianstad"},
-    {"name": "SkÃ¥nekakor AB", "address": "Perstorp"},
-    {"name": "SmÃ¥brÃ¶d AB", "address": "MalmÃ¶"}
+    {"name": "Skånekakor AB", "address": "Perstorp"},
+    {"name": "Småbröd AB", "address": "Malmö"}
   ]
 }
