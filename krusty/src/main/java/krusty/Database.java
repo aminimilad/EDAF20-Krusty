@@ -200,15 +200,15 @@ public class Database {
 			}
 			rs.close();
 			
-		} catch (SQLException e) {
+		} catch (SQLException ero) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			ero.printStackTrace();
 		}
 		
 		return null;
 	}
 	
-	private void subtractFromStorage(String cookieName) {
+	private void subtractFromstorage(String cookieName) {
 		
 	}
 }
