@@ -16,7 +16,7 @@ public class ServerMain {
 		staticFiles.location("/public");
 
 		db = new Database();
-		db.connect();
+		db.connect(true);
 
 		port(PORT);
 		
