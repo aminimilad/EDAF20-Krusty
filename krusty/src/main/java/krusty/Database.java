@@ -292,9 +292,9 @@ public class Database {
 			}
 			rs.close();
 			
-		} catch (SQLException e) {
+		} catch (SQLException err) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			err.printStackTrace();
 		}
 		
 		return null;
