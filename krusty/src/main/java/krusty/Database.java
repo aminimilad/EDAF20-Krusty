@@ -15,6 +15,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.sqlite.SQLiteConfig;
+
 import static krusty.Jsonizer.toJson;
 
 public class Database {
@@ -27,6 +29,10 @@ public class Database {
 	private static final String jdbcUsername = "<CHANGE ME>";
 	private static final String jdbcPassword = "<CHANGE ME>" I changed you.. you gone grey fr doe
 	*/
+	SQLiteConfig config = new SQLiteConfig();
+	Calendar calendar = Calendar.getInstance();
+	Timestamp TimeStamp = new Timestamp(calendar.getTime().getTime());
+	String Q;
 
 	public void connect() {
 		// Connect to database here
@@ -43,7 +49,7 @@ public class Database {
 
 	public String getCustomers(Request req, Response res) {
 		
-		String Q = "SELECT * FROM Customers";
+		Q = "SELECT * FROM Customers";
 
 		try (PreparedStatement stmt = conn.prepareStatement(Q)) {
 			return Jsonizer.toJson(stmt.executeQuery(), "customers");
@@ -54,7 +60,7 @@ public class Database {
 	}
 
 	public String getRawMaterials(Request req, Response res) {
-		String Q = "SELECT name, amountStored AS amount, unit FROM Ingredients";
+		Q = "SELECT name, amountStored AS amount, unit FROM Ingredients";
 		
 		try(PreparedStatement stmt = conn.prepareStatement(Q)){
 			return Jsonizer.toJson(stmt.executeQuery(), "raw-materials");
@@ -66,7 +72,7 @@ public class Database {
 	}
 
 	public String getCookies(Request req, Response res) {
-		String Q = "SELECT cookieName AS name FROM Cookies";
+		Q = "SELECT cookieName AS name FROM Cookies";
 		
 		try(PreparedStatement stmt = conn.prepareStatement(Q)) {
 			return Jsonizer.toJson(stmt.executeQuery(), "cookies");
@@ -80,7 +86,7 @@ public class Database {
 	}
 
 	public String getRecipes(Request req, Response res) {
-		String Q = "SELECT * FROM containsIngredient";
+		Q = "SELECT * FROM containsIngredient";
 		
 		try(PreparedStatement stmt = conn.prepareStatement(Q)) {
 			return Jsonizer.toJson(stmt.executeQuery(), "recipe");
@@ -97,6 +103,19 @@ public class Database {
 	}
 
 	public String reset(Request req, Response res) {
+		
+		try {
+			 //foreign keys OFF
+			config.enforceForeignKeys(false);
+			conn = DriverManager.getConnection(jdbcString, config.toProperties());
+			//do stuff
+			
+			
+			//foreign keys ON
+			} catch (SQLException e) {
+			  e.printStackTrace();
+			}
+		
 		return "{}";
 	}
 
@@ -110,14 +129,12 @@ public class Database {
 		//Will be used to create a pallet ofc
 		int orderID = createOrder();
 		int palletID = -1;
-		String Q = "INSERT INTO Pallets(cookieName, orderID, dateProduced, isBlocked, location) VALUES (?,?,?,?,?)";
-		Calendar calendar = Calendar.getInstance();
-		Timestamp ourJavaTimestampObject = new Timestamp(calendar.getTime().getTime());
+		Q = "INSERT INTO Pallets(cookieName, orderID, dateProduced, isBlocked, location) VALUES (?,?,?,?,?)";
 		try(PreparedStatement stmt = conn.prepareStatement(Q)) {
 			
 			stmt.setString(1,  cookie);
 			stmt.setInt(2, orderID);
-			stmt.setString(3, ourJavaTimestampObject.toString());
+			stmt.setString(3, TimeStamp.toString());
 			stmt.setString(4, "no");
 			stmt.setString(5, sendLocation());
 			stmt.executeUpdate();
@@ -136,7 +153,7 @@ public class Database {
 	}
 	
 	private boolean cookieExists(String cookieName) {
-		String Q = "SELECT * FROM Cookies WHERE cookieName = ?";
+		Q = "SELECT * FROM Cookies WHERE cookieName = ?";
 		
 		try(PreparedStatement stmt = conn.prepareStatement(Q)) {
 			stmt.setString(1, cookieName);
@@ -156,12 +173,12 @@ public class Database {
 	
 	private int createOrder() {
 		
-		String Q = "INSERT INTO Orders(name, placedDate) VALUES(?,?)";
+		Q = "INSERT INTO Orders(name, placedDate) VALUES(?,?)";
 		try (PreparedStatement stmt = conn.prepareStatement(Q)) {
 			
 			
 			stmt.setString(1, getCustomer());
-			stmt.setString(2, "CURRENT_TIMESTAMP");
+			stmt.setString(2, TimeStamp.toString() );
 			stmt.executeUpdate();
 			
 		} catch (SQLException e) {
@@ -192,7 +209,7 @@ public class Database {
 	
 	private String getCustomer() {
 		
-		String Q = "SELECT name FROM Customers ORDER BY RANDOM() LIMIT 1";
+		Q = "SELECT name FROM Customers ORDER BY RANDOM() LIMIT 1";
 		
 		try(PreparedStatement stmt = conn.prepareStatement(Q)){
 			
@@ -220,7 +237,7 @@ public class Database {
 			conn.setAutoCommit(false);
 			//Get all ingredients used in the making of the cookie aswell as 
 			//the stored amount of each ingredient
-			String Q = "SELECT Ingredients.name, amountStored FROM Ingredients \n" + 
+			Q = "SELECT Ingredients.name, amountStored FROM Ingredients \n" + 
 					"INNER JOIN ContainsIngredients \n" + 
 					"ON ContainsIngredients.ingredient = Ingredients.name \n" + 
 					"WHERE cookieName = ?;";
@@ -282,7 +299,7 @@ public class Database {
 	
 	private String sendLocation() {
 		
-		String Q = "SELECT address FROM Orders, Customers WHERE Orders.name = Customers.name";
+		Q = "SELECT address FROM Orders, Customers WHERE Orders.name = Customers.name";
 		
 		try(PreparedStatement stmt = conn.prepareStatement(Q)){
 			
@@ -299,4 +316,62 @@ public class Database {
 		
 		return null;
 	}
+	
+	//-----//RESET METHODS//-----//
+	
+	private void removeRows(String table) {
+		Q = "DELETE FROM " + table;
+
+		try (PreparedStatement stmt = conn.prepareStatement(Q)) {
+
+			stmt.executeUpdate();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	private void insertCookie(String cookieName) {
+		Q = "INSERT INTO Cookies(name) VALUES (?);";
+
+		try (PreparedStatement stmt = conn.prepareStatement(Q)) {
+			stmt.setString(1, cookieName);
+			
+			stmt.executeUpdate();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	private void insertIng(String ing, int amountStored, String dateNow, int deliveryAmount, String unit) {
+		Q = "INSERT INTO" + 
+		"Ingredients(name, amountStored, deliveryDate, deliveryAmount, unit) VALUES(?,?,?,?,?)";
+		
+		try(PreparedStatement stmt = conn.prepareStatement(Q)){
+			stmt.setString(1, ing);
+			stmt.setInt(2, amountStored);
+			stmt.setString(3, TimeStamp.toString());
+			stmt.setInt(4, deliveryAmount);
+			stmt.setString(5, unit);
+			
+			stmt.executeUpdate();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	private void insertCustomer(String name, String address) {
+		Q = "INSERT INTO Customers(name, address) VALUES (?,?)";
+		
+		try(PreparedStatement stmt = conn.prepareStatement(Q)){
+			stmt.setString(1, name);
+			stmt.setString(2, address);
+			
+			stmt.executeUpdate();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
 }
