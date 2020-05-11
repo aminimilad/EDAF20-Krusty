@@ -226,7 +226,7 @@ public class Database {
 			stmt.setInt(2, orderID);
 			stmt.setString(3, LocalDate.now().toString());
 			stmt.setString(4, "no");
-			stmt.setString(5, sendLocation());
+			stmt.setString(5, sendLocation(orderID));
 			stmt.executeUpdate();
 			palletID = getIDofLastInsertedRow();
 			if (palletID > -1) {
@@ -331,8 +331,8 @@ public class Database {
 			PreparedStatement stmt = conn.prepareStatement(Q);
 			stmt.setString(1, cookieName);
 			ResultSet rs = stmt.executeQuery();
-
 			while (rs.next()) {
+				
 				// Map them...
 				IngAmount.put(rs.getString("name"), rs.getInt("amountStored"));
 			}
@@ -346,9 +346,11 @@ public class Database {
 			rs = stmt.executeQuery();
 
 			while (rs.next()) {
-
+				
+				
 				String ingredient = rs.getString("ingredient");
 				int amount = rs.getInt("amount");
+				
 				// Update storage by subtracting
 				IngAmount.put(ingredient, IngAmount.get(ingredient) - rs.getInt("amount") * 54);
 			}
@@ -383,12 +385,12 @@ public class Database {
 		}
 	}
 
-	private String sendLocation() {
+	private String sendLocation(int orderID) {
 
-		Q = "SELECT address FROM Orders, Customers WHERE Orders.name = Customers.name";
+		Q = "SELECT Customers.address from Customers JOIN Orders ON Orders.name = Customers.name WHERE orderID = ?";
 
 		try (PreparedStatement stmt = conn.prepareStatement(Q)) {
-
+			stmt.setInt(1, orderID);
 			ResultSet rs = stmt.executeQuery();
 			if (rs.next()) {
 				return rs.getString("address");
