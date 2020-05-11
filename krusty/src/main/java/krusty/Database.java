@@ -234,7 +234,7 @@ public class Database {
 				subtractFromStorage(cookie);
 			}
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
+			
 			e.printStackTrace();
 			return Jsonizer.anythingToJson("error", "status");
 		}
